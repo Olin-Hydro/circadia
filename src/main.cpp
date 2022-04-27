@@ -73,6 +73,8 @@ void updateParams()
     ecUpPump.getOnTime();
     waterPump.getInterval();
     waterPump.getOnTime();
+    light.getInterval();
+    light.getOnTime();
     lastRefresh = rtc.now();
   }
 }
