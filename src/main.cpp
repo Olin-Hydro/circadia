@@ -7,9 +7,10 @@
 PhSensor phSensor(A0);
 EcSensor ecSensor;
 TempSensor tempSensor(A2);
-Relay phDownPump(53, "ph");
-Relay ecUpPump(52, "ec");
-Relay waterPump(51, "water");
+Relay phDownPump(51, "ph");
+Relay ecUpPump(49, "ec");
+Relay waterPump(25, "water");
+Relay light(23, "light");
 RTC_DS3231 rtc;
 DateTime lastRefresh;
 int refreshParams = 300;
@@ -47,6 +48,8 @@ void setup()
   ecUpPump.onTime = 6;
   waterPump.interval = 1200;
   waterPump.onTime = 300;
+  light.interval = 1200;
+  light.onTime = 300;
 }
 
 bool isPassedInterval(int interval, DateTime lastReading)
@@ -70,6 +73,8 @@ void updateParams()
     ecUpPump.getOnTime();
     waterPump.getInterval();
     waterPump.getOnTime();
+    light.getInterval();
+    light.getOnTime();
     lastRefresh = rtc.now();
   }
 }
@@ -130,6 +135,28 @@ void runWaterPump()
   }
 }
 
+void runlights()
+{
+  if (isPassedInterval(light.interval, light.lastOff))
+  {
+    if (light.lastOff >= light.lastOn)
+    {
+      light.On();
+      light.sendTaskLog(1);
+      light.lastOn = rtc.now();
+    }
+  }
+  if (isPassedInterval(light.onTime, light.lastOn))
+  {
+    if (light.lastOff < light.lastOn)
+    {
+      light.Off();
+      light.sendTaskLog(0);
+      light.lastOff = rtc.now();
+    }
+  }
+}
+
 void runPhSensor()
 {
   if (isPassedInterval(phSensor.interval, phSensor.lastReading))
@@ -167,6 +194,7 @@ void loop()
   runTempSensor();
   runPhDownPump();
   runEcUpPump();
+  runlights();
   runWaterPump();
   updateParams();
   delay(100);
